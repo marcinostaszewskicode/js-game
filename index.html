@@ -1,13 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS Game</title>
+    <title>StepMania Game</title>
     <link rel="stylesheet" href="STYLES/style.css">
 </head>
 <body>
-    <div id="app"></div>
-    <script src="index.js"></script>
+    <div id="gameContainer">
+        <div id="header">
+            <div id="songInfo">
+                <div id="songTitle">Ładowanie...</div>
+                <div id="songArtist"></div>
+            </div>
+            <div id="score">
+                <div id="points">Punkty: 0</div>
+                <div id="combo">Combo: 0</div>
+            </div>
+        </div>
+
+        <div id="gameArea">
+            <div id="playField">
+                <!-- Strefa hit'u (niebieska linia na górze) -->
+                <div id="hitZone"></div>
+
+                <!-- 4 lane'i dla 4 kierunków strzałek -->
+                <div class="lane" data-lane="0">
+                    <div class="notes-container"></div>
+                </div>
+                <div class="lane" data-lane="1">
+                    <div class="notes-container"></div>
+                </div>
+                <div class="lane" data-lane="2">
+                    <div class="notes-container"></div>
+                </div>
+                <div class="lane" data-lane="3">
+                    <div class="notes-container"></div>
+                </div>
+            </div>
+
+            <!-- Klawisza pomocnicze -->
+            <div id="instructions">
+                <p><strong>Sterowanie:</strong> Z, X, , (przecinek), . (kropka) lub Strzałki</p>
+                <p>Naciśnij klawisz gdy strzałka wejdzie w niebieską strefę!</p>
+            </div>
+        </div>
+
+        <div id="footer">
+            <button id="startBtn" onclick="game.start()">Start</button>
+            <button id="resetBtn" onclick="game.reset()">Reset</button>
+            <select id="fileSelector"></select>
+        </div>
+    </div>
+
+    <script src="SCRIPTS/index.js"></script>
 </body>
 </html>

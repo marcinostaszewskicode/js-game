@@ -4,13 +4,333 @@
     box-sizing: border-box;
 }
 
-html, body {
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#gameContainer {
     width: 100%;
-    height: 100%;
+    max-width: 500px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+    border: 2px solid rgba(0, 200, 255, 0.5);
+}
+
+#header {
+    padding: 20px;
+    background: linear-gradient(90deg, #0f3460, #16213e);
+    border-bottom: 2px solid #00c8ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#songInfo {
+    flex: 1;
+}
+
+#songTitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #00c8ff;
+}
+
+#songArtist {
+    font-size: 14px;
+    color: #888;
+}
+
+#score {
+    text-align: right;
+    font-size: 14px;
+}
+
+#score div {
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+#points {
+    color: #00ff00;
+}
+
+#combo {
+    color: #ffff00;
+}
+
+#gameArea {
+    padding: 20px;
+}
+
+#playField {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    background: linear-gradient(180deg, #0a0e27 0%, #16213e 100%);
+    border: 2px solid #00c8ff;
+    border-radius: 5px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    padding: 2px;
+    margin-bottom: 20px;
+}
+
+/* Hit Zone - niebieska linia na górze */
+#hitZone {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(90deg, 
+        rgba(0, 200, 255, 0) 0%,
+        rgba(0, 200, 255, 0.3) 50%,
+        rgba(0, 200, 255, 0) 100%);
+    border-top: 3px solid #00ffff;
+    border-bottom: 3px solid #00ffff;
+    box-shadow: 0 0 15px rgba(0, 200, 255, 0.6);
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Lane dla każdej strzałki */
+.lane {
+    position: relative;
+    background: rgba(0, 50, 100, 0.3);
+    border: 1px solid rgba(0, 200, 255, 0.2);
     overflow: hidden;
 }
 
-#app {
+.lane::before {
+    content: attr(data-lane);
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    opacity: 0.3;
+    z-index: 1;
+}
+
+.notes-container {
+    position: relative;
     width: 100%;
     height: 100%;
+}
+
+/* Notki (strzałki) */
+.note {
+    position: absolute;
+    width: 100%;
+    height: 50px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #00ffff, #0099ff);
+    color: #000;
+    border: 2px solid #00ffff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+    transition: background 0.1s;
+    z-index: 5;
+    will-change: transform;
+}
+
+.note:hover {
+    filter: brightness(1.2);
+}
+
+/* Animacja pulsowania dla hit zone */
+@keyframes hitZonePulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(0, 200, 255, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(0, 200, 255, 1);
+    }
+}
+
+#hitZone {
+    animation: hitZonePulse 1s infinite;
+}
+
+#instructions {
+    background: rgba(0, 50, 100, 0.5);
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    border-left: 3px solid #00ffff;
+}
+
+#instructions p {
+    margin: 5px 0;
+}
+
+#instructions strong {
+    color: #00ffff;
+}
+
+#footer {
+    padding: 15px 20px;
+    background: #0f3460;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 2px solid #00c8ff;
+}
+
+button {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 15px;
+    background: linear-gradient(135deg, #00c8ff, #0099ff);
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #00ffff, #00b3ff);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 200, 255, 0.6);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+#fileSelector {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 15px;
+    background: rgba(0, 200, 255, 0.2);
+    color: #00ffff;
+    border: 2px solid #00c8ff;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#fileSelector:hover {
+    background: rgba(0, 200, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+}
+
+#fileSelector option {
+    background: #16213e;
+    color: #00ffff;
+}
+
+/* Responsywność */
+@media (max-width: 600px) {
+    #gameContainer {
+        max-width: 100%;
+    }
+
+    #header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    #score {
+        text-align: center;
+    }
+
+    #songInfo {
+        width: 100%;
+    }
+
+    #playField {
+        height: 500px;
+    }
+
+    .note {
+        font-size: 24px;
+        height: 40px;
+    }
+
+    #hitZone {
+        height: 35px;
+        top: 20px;
+    }
+
+    #footer {
+        flex-direction: column;
+    }
+
+    button,
+    #fileSelector {
+        width: 100%;
+    }
+}
+
+/* Efekty feedback'u */
+@keyframes noteHit {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
+
+.note {
+    animation-duration: 0.5s;
+}
+
+/* Scroll bar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 200, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 200, 255, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 200, 255, 0.8);
+}
+
+/* Blask efekt dla gry */
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(0, 255, 255, 1);
+    }
+}
+
+#songTitle {
+    animation: glow 2s infinite;
 }
