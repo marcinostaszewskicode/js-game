@@ -30,7 +30,7 @@ class StepManiaParser {
             }
 
             if (line.startsWith('#NOTES:')) {
-                // Znaleźliśmy sekcję notek
+                // Znaleźliśmy sekcję #NOTES
                 break;
             }
         }
@@ -104,10 +104,10 @@ class StepManiaParser {
                 break;
             }
 
-            if (currentLine > startLine + 2000) break; // Zabezpieczenie
+            if (currentLine > startLine + 4000) break; // Zabezpieczenie
         }
 
-        // Parsuj notek z sectionContent
+        // Parsuj nuty z sectionContent
         chartData.notes = this.parseNotes(sectionContent);
         chartData.endLine = currentLine;
 
@@ -117,14 +117,15 @@ class StepManiaParser {
     }
 
     /**
-     * Parsuje notek ze stringa
+     * Parsuje nuty ze stringa
      */
     static parseNotes(content) {
         const notes = [];
         const measures = content.split(',');
 
         measures.forEach((measure, measureIdx) => {
-            const lines = measure.trim().split('\n').filter(l => l.trim());
+            const lineSplit = measure.includes('\n') ? '\n' : '\r';
+            const lines = measure.trim().split(lineSplit).filter(l => l.trim());
 
             lines.forEach((line, lineIdx) => {
                 const cleanLine = line.trim();
@@ -133,7 +134,7 @@ class StepManiaParser {
                         const noteType = cleanLine[lane];
                         if (noteType !== '0') {
                             notes.push({
-                                time: (measureIdx * 4 + lineIdx) * 125, // ms (250ms per beat przy BPM 120)
+                                time: (measureIdx * 4 + lineIdx) * 500,
                                 lane: lane,
                                 type: noteType
                             });
@@ -154,6 +155,7 @@ class StepManiaGame {
     constructor() {
         this.isRunning = false;
         this.currentChart = null;
+        this.audio = null;
         this.currentNotes = [];
         this.currentNoteIndex = 0;
         this.startTime = 0;
@@ -166,13 +168,24 @@ class StepManiaGame {
         this.noteSpeed = 3; // Pikseli per ms
         this.hitWindowMs = 100; // Okno do trafienia
         this.laneWidth = 100;
-        this.playFieldHeight = 600;
+        this.playFieldHeight = 500;
+        this.hitZoneTop = 30;
+        this.hitZoneHeight = 40;
 
         this.activeNotes = [];
         this.keyStates = {};
 
+        this.initializePlayFieldStyles();
         this.initializeEventListeners();
         this.loadAvailableFiles();
+    }
+
+    initializePlayFieldStyles() {
+        const hitZone = document.getElementById('hitZone');
+        hitZone.style.top = `${this.hitZoneTop}px`;
+        hitZone.style.height = `${this.hitZoneHeight}px`;
+        const playField = document.getElementById('playField');
+        playField.style.height = `${this.playFieldHeight}px`;
     }
 
     initializeEventListeners() {
@@ -182,10 +195,10 @@ class StepManiaGame {
             'x': 1,
             ',': 2,
             '.': 3,
-            'ArrowLeft': 0,
-            'ArrowDown': 1,
-            'ArrowUp': 2,
-            'ArrowRight': 3
+            'arrowleft': 0,
+            'arrowdown': 1,
+            'arrowup': 2,
+            'arrowright': 3
         };
 
         document.addEventListener('keydown', (e) => {
@@ -210,7 +223,13 @@ class StepManiaGame {
 
         // Lista znanych plików
         const files = [
-            'Silent Hill Dubstep.sm'
+            'Adele Vs Eminem - Let Yourself Skyfall (Mashup)',
+            'corook - Scooby',
+            'MIRROR - Tetoris - Kasane Teto',
+            'Silent Hill Dubstep',
+            'Slop',
+            'SPAGHETTI',
+            'Who is going to Sleep with your Wife'
         ];
 
         files.forEach(file => {
@@ -221,20 +240,23 @@ class StepManiaGame {
         });
 
         fileSelector.addEventListener('change', (e) => {
-            this.loadFile(e.target.value);
+            this.loadFiles(e.target.value);
+
         });
 
         // Załaduj pierwszy plik
         if (files.length > 0) {
-            this.loadFile(files[0]);
+            this.loadFiles(files[0]);
         }
     }
 
-    async loadFile(filename) {
+    async loadFiles(filename) {
         try {
-            const response = await fetch(`StepManiaFiles/${filename}`);
+            const response = await fetch(`StepManiaFiles/${filename}.sm`);
             const content = await response.text();
             const parsed = StepManiaParser.parse(content);
+            this.audio = new Audio(`StepManiaFiles/${baseName}.mp3`);
+            this.audio.preload = 'auto';
 
             // Pokaż pierwszy dostępny chart (Medium difficulty)
             const chart = parsed.charts.find(c => c.difficulty === 'Medium') || parsed.charts[0];
@@ -246,7 +268,7 @@ class StepManiaGame {
                 document.getElementById('songTitle').textContent = parsed.metadata.TITLE || 'Unknown';
                 document.getElementById('songArtist').textContent = parsed.metadata.ARTIST || 'Unknown Artist';
 
-                // Dostosuj szybkość notek
+                // Dostosuj szybkość nut
                 this.adjustNoteSpeed();
             }
         } catch (error) {
@@ -257,10 +279,7 @@ class StepManiaGame {
 
     adjustNoteSpeed() {
         // Oblicz szybkość na podstawie BPM
-        // BPM 145 = 145 beat na minutę = ~2.42 beat na sekundę
-        // Przy OFFSET -0.137 zacznij z opóźnieniem
-        const beat = (this.bpm / 60) / 1000; // beat na ms
-        this.noteSpeed = 2.5; // Dostosuj empirycznie
+        this.noteSpeed = (this.bpm / 60) / 10;
     }
 
     start() {
@@ -270,6 +289,10 @@ class StepManiaGame {
         }
 
         this.isRunning = true;
+        if (this.audio) {
+            this.audio.currentTime = 0;
+            this.audio.play().catch(() => {});
+        }
         this.startTime = Date.now();
         this.currentNoteIndex = 0;
         this.score = 0;
@@ -289,6 +312,11 @@ class StepManiaGame {
         this.combo = 0;
         this.hits = { perfect: 0, good: 0, miss: 0 };
 
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+        }
+
         this.clearNotes();
         this.updateScore();
     }
@@ -299,7 +327,7 @@ class StepManiaGame {
         const now = Date.now();
         const elapsed = now - this.startTime;
 
-        // Dodaj nowe noto jeśli są
+        // Dodaj nowe nuty jeśli są
         while (
             this.currentNoteIndex < this.currentNotes.length &&
             this.currentNotes[this.currentNoteIndex].time <= elapsed + 2000 // Pokaż 2s przed czasem
@@ -309,7 +337,7 @@ class StepManiaGame {
             this.currentNoteIndex++;
         }
 
-        // Aktualizuj pozycje notek
+        // Aktualizuj pozycje nut
         this.updateActiveNotes(elapsed);
 
         // Sprawdź czy gra się skończyła
@@ -369,11 +397,10 @@ class StepManiaGame {
         if (!this.isRunning) return;
 
         const hitZone = {
-            top: this.playFieldHeight - 70,
-            bottom: this.playFieldHeight - 30
+            top: this.hitZoneTop,
+            bottom: this.hitZoneTop + this.hitZoneHeight
         };
-
-        // Szukaj notek w tym lane, które są w hit zone
+        // Szukaj nut w tym lane, które są w hit zone
         let bestNote = null;
         let bestDiff = Infinity;
 
