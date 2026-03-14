@@ -255,7 +255,7 @@ class StepManiaGame {
             const response = await fetch(`StepManiaFiles/${filename}.sm`);
             const content = await response.text();
             const parsed = StepManiaParser.parse(content);
-            this.audio = new Audio(`StepManiaFiles/${baseName}.mp3`);
+            this.audio = new Audio(`MusicFiles/${filename}.mp3`);
             this.audio.preload = 'auto';
 
             // Pokaż pierwszy dostępny chart (Medium difficulty)
@@ -272,8 +272,9 @@ class StepManiaGame {
                 this.adjustNoteSpeed();
             }
         } catch (error) {
-            console.error('Błąd podczas ładowania pliku:', error);
-            document.getElementById('songTitle').textContent = 'Błąd podczas ładowania pliku';
+            const errorMessage = 'Błąd podczas ładowania pliku';
+            console.error(errorMessage + ': ', error);
+            document.getElementById('songTitle').textContent = errorMessage;
         }
     }
 
